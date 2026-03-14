@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel Client - Exam Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* LOGIN SCREEN */
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            background: #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        #loginScreen.hide {
+            animation: screenFadeOut 0.6s ease forwards;
+        }
+
+        @keyframes screenFadeOut {
+            to { opacity: 0; pointer-events: none; }
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(59, 130, 246, 0.6);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* Glowing orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: orbPulse 6s ease-in-out infinite alternate;
+        }
+
+        .orb1 { width: 400px; height: 400px; background: #3b82f6; top: -100px; left: -100px; }
+        .orb2 { width: 350px; height: 350px; background: #a855f7; bottom: -80px; right: -80px; animation-delay: -3s; }
+
+        @keyframes orbPulse {
+            from { transform: scale(1); opacity: 0.12; }
+            to { transform: scale(1.2); opacity: 0.2; }
+        }
+
+        .login-card {
+            position: relative;
+            background: rgba(22, 27, 34, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 48px 44px;
+            width: 100%;
+            max-width: 420px;
+            animation: cardEntry 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+        }
+
+        @keyframes cardEntry {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo .shield {
+            font-size: 48px;
+            display: block;
+            animation: shieldPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes shieldPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(59,130,246,0.4)); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(59,130,246,0.8)); }
+        }
+
+        .login-logo h1 {
+            color: #e6edf3;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .login-logo p {
+            color: #8b949e;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .login-field {
+            margin-bottom: 18px;
+        }
+
+        .login-field label {
+            display: block;
+            color: #8b949e;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+
+        .login-field input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: #e6edf3;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .login-field input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+
+        .login-field input::placeholder { color: #484f58; }
+
+        .login-error {
+            color: #f85149;
+            font-size: 12px;
+            margin-top: -10px;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #238636;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(35,134,54,0.3);
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            background: #2ea043;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(35,134,54,0.4);
+        }
+
+        .login-btn:active { transform: translateY(0); }
+
+        /* Ripple on button */
+        .login-btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: scale(0);
+            animation: ripple 0.5s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        .login-notice {
+            text-align: center;
+            color: #484f58;
+            font-size: 12px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        /* EXAM SCREEN - hidden initially */
+        #examScreen { display: none; }
+        #examScreen.show { display: block; }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <div class="particles" id="particles"></div>
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="login-card">
+            <div class="login-logo">
+                <span class="shield">🛡️</span>
+                <h1>Sentinel Exam</h1>
+                <p>Secure Online Examination System</p>
+            </div>
+            <div class="login-field">
+                <label>Student ID</label>
+                <input type="text" id="inputStudentId" placeholder="e.g. STU2024001" maxlength="20" />
+            </div>
+            <div class="login-field">
+                <label>Full Name</label>
+                <input type="text" id="inputName" placeholder="Enter your full name" maxlength="60" />
+            </div>
+            <div class="login-field">
+                <label>Roll Number</label>
+                <input type="text" id="inputRoll" placeholder="e.g. CS-101" maxlength="20" />
+            </div>
+            <div class="login-error" id="loginError">Please fill in all fields.</div>
+            <button class="login-btn" id="loginBtn" onclick="startExam(event)">Begin Exam →</button>
+            <p class="login-notice">🔒 This session is monitored. All activity is logged.<br>Ensure you are in a quiet environment before proceeding.</p>
+        </div>
+    </div>
+
+    <!-- EXAM SCREEN -->
+    <div id="examScreen">
+    <div class="status-bar" id="statusBar">
+        <span>Exam in Progress - Stay Focused</span>
+        <div class="timer" id="timer">15:00</div>
+    </div>
+    
+    <div class="exam-container" id="examContainer" style="opacity:0;transform:translateY(20px);transition:opacity 0.5s ease,transform 0.5s ease;">
+        <h1>Online Examination System</h1>
+        <div class="exam-info">
+            <div>
+                <p><strong>Student ID:</strong> <span id="studentId"></span></p>
+                <p><strong>Duration:</strong> 15 minutes</p>
+            </div>
+            <div style="text-align: right;">
+                <p><strong>Time Remaining:</strong> <span id="timeRemaining" style="color: #dc3545; font-weight: bold;">15:00</span></p>
+            </div>
+        </div>
+        
+    <div class="question">
+    <h3>Question 1: What is the capital of France?</h3>
+
+    <label><input type="radio" name="q1"> Paris</label><br>
+    <label><input type="radio" name="q1"> London</label><br>
+    <label><input type="radio" name="q1"> Rome</label><br>
+    <label><input type="radio" name="q1"> Berlin</label>
+</div>
+
+<div class="question">
+    <h3>Question 2: What does OOP stand for?</h3>
+
+    <label><input type="radio" name="q2"> Object Oriented Programming</label><br>
+    <label><input type="radio" name="q2"> Online Operating Program</label><br>
+    <label><input type="radio" name="q2"> Object Operating Process</label><br>
+    <label><input type="radio" name="q2"> Open Online Platform</label>
+</div>
+        
+        <button class="submit-btn" id="submitBtn" onclick="submitExam()">Submit Exam</button>
+    </div>
+    </div> <!-- end examScreen -->
+
+    <script>
+        var studentId = '';
+
+        // Generate particles
+        (function() {
+            var container = document.getElementById('particles');
+            for (var i = 0; i < 40; i++) {
+                var p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.width = p.style.height = (Math.random() * 3 + 1) + 'px';
+                p.style.animationDuration = (Math.random() * 10 + 8) + 's';
+                p.style.animationDelay = (Math.random() * 10) + 's';
+                container.appendChild(p);
+            }
+        })();
+
+        document.getElementById('inputStudentId').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('inputName').focus();
+        });
+        document.getElementById('inputName').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('inputRoll').focus();
+        });
+        document.getElementById('inputRoll').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') startExam(e);
+        });
+
+        var allowedStudents = [
+            { id: 'UI001', name: 'Yashaswini', roll: 'ISC101' }
+        ];
+
+        function startExam(e) {
+            var sid = document.getElementById('inputStudentId').value.trim();
+            var name = document.getElementById('inputName').value.trim();
+            var roll = document.getElementById('inputRoll').value.trim();
+            var err = document.getElementById('loginError');
+
+            if (!sid || !name || !roll) {
+                err.textContent = 'Please fill in all fields.';
+                err.style.display = 'block';
+                // Shake animation
+                var card = document.querySelector('.login-card');
+                card.style.animation = 'none';
+                card.style.transform = 'translateX(-8px)';
+                setTimeout(function() { card.style.transform = 'translateX(8px)'; }, 80);
+                setTimeout(function() { card.style.transform = 'translateX(-5px)'; }, 160);
+                setTimeout(function() { card.style.transform = 'translateX(0)'; card.style.transition = 'transform 0.2s'; }, 240);
+                return;
+            }
+
+            var valid = allowedStudents.some(function(s) {
+                return s.id === sid && s.name === name && s.roll === roll;
+            });
+            if (!valid) {
+                err.textContent = 'Invalid student details.';
+                err.style.display = 'block';
+                var card = document.querySelector('.login-card');
+                card.style.transform = 'translateX(-8px)';
+                setTimeout(function() { card.style.transform = 'translateX(8px)'; }, 80);
+                setTimeout(function() { card.style.transform = 'translateX(-5px)'; }, 160);
+                setTimeout(function() { card.style.transform = 'translateX(0)'; card.style.transition = 'transform 0.2s'; }, 240);
+                return;
+            }
+
+            err.style.display = 'none';
+            studentId = sid;
+
+            // Ripple effect on button
+            var btn = document.getElementById('loginBtn');
+            var ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.width = ripple.style.height = '200px';
+            ripple.style.left = '50%'; ripple.style.top = '50%';
+            ripple.style.marginLeft = ripple.style.marginTop = '-100px';
+            btn.appendChild(ripple);
+
+            setTimeout(function() {
+                document.getElementById('loginScreen').classList.add('hide');
+                setTimeout(function() {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('examScreen').classList.add('show');
+                    document.getElementById('studentId').textContent = sid + ' — ' + name + ' (' + roll + ')';
+                    // Animate exam container in
+                    setTimeout(function() {
+                        var ec = document.getElementById('examContainer');
+                        ec.style.opacity = '1';
+                        ec.style.transform = 'translateY(0)';
+                    }, 100);
+                    startMonitoring();
+                }, 600);
+            }, 300);
+        }
+
+        var violations = [];
+        var blurStartTime = null;
+        var lastActivityTime = Date.now();
+        var idleCheckInterval;
+        var examStartTime = Date.now();
+        var examDuration = 15 * 60 * 1000;
+        var examEnded = false;
+        var timerInterval;
+        
+        var API_URL = 'http://localhost:3000';
+
+        function startMonitoring() {
+            violations = [];
+            blurStartTime = null;
+            lastActivityTime = Date.now();
+            examStartTime = Date.now();
+            examEnded = false;
+            timerInterval = setInterval(updateTimer, 100);
+            updateTimer();
+            checkWindowSize();
+            idleCheckInterval = setInterval(function() {
+                var idleTime = (Date.now() - lastActivityTime) / 1000;
+                if (idleTime > 60) {
+                    logViolation('IDLE_DETECTED', 'No activity for ' + idleTime.toFixed(0) + ' seconds');
+                    lastActivityTime = Date.now();
+                }
+            }, 10000);
+        }
+        
+        function logViolation(type, details) {
+            var violation = {
+                studentId: studentId,
+                type: type,
+                details: details,
+                timestamp: new Date().toISOString()
+            };
+            violations.push(violation);
+            
+            fetch(API_URL + '/log-violation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(violation)
+            }).catch(function(err) { console.error('Failed to log violation:', err); });
+            
+            updateStatusBar(type);
+        }
+        
+        function updateStatusBar(violationType) {
+            var bar = document.getElementById('statusBar');
+            bar.className = 'status-bar danger';
+            bar.textContent = '⚠️ Violation Detected: ' + violationType;
+            setTimeout(function() {
+                bar.className = 'status-bar warning';
+                bar.textContent = 'Warning: Activity is being monitored';
+            }, 3000);
+        }
+        
+        function updateTimer() {
+            var now = Date.now();
+            var elapsedMs = now - examStartTime;
+            var remainingMs = examDuration - elapsedMs;
+            
+            if (remainingMs < 0) remainingMs = 0;
+            
+            var totalSeconds = Math.floor(remainingMs / 1000);
+            var minutes = Math.floor(totalSeconds / 60);
+            var seconds = totalSeconds % 60;
+            var timeStr = (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            
+            document.getElementById('timer').textContent = timeStr;
+            document.getElementById('timeRemaining').textContent = timeStr;
+            
+            var timerEl = document.getElementById('timer');
+            if (totalSeconds <= 60) {
+                timerEl.className = 'timer critical';
+            } else {
+                timerEl.className = 'timer';
+            }
+            
+            if (remainingMs <= 0) {
+                examEnded = true;
+                clearInterval(timerInterval);
+                document.getElementById('submitBtn').disabled = true;
+                alert('Time is up! Your exam will be submitted automatically.');
+                submitExam();
+            }
+        }
+        
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                blurStartTime = Date.now();
+            } else {
+                if (blurStartTime) {
+                    var awayTime = ((Date.now() - blurStartTime) / 1000).toFixed(2);
+                    logViolation('TAB_SWITCH', 'Away for ' + awayTime + ' seconds');
+                    blurStartTime = null;
+                }
+            }
+        });
+        
+        window.addEventListener('blur', function() {
+            if (!blurStartTime) blurStartTime = Date.now();
+        });
+        
+        window.addEventListener('focus', function() {
+            if (blurStartTime) {
+                var awayTime = ((Date.now() - blurStartTime) / 1000).toFixed(2);
+                logViolation('WINDOW_BLUR', 'Focus lost for ' + awayTime + ' seconds');
+                blurStartTime = null;
+            }
+        });
+        
+        function checkWindowSize() {
+            var screenArea = window.screen.width * window.screen.height;
+            var windowArea = window.innerWidth * window.innerHeight;
+            var percentage = (windowArea / screenArea) * 100;
+            
+            if (percentage < 80) {
+                logViolation('WINDOW_RESIZE', 'Window size: ' + percentage.toFixed(1) + '% of screen');
+            }
+        }
+        
+        window.addEventListener('resize', checkWindowSize);
+        checkWindowSize();
+        
+        document.addEventListener('keydown', function(e) {
+            lastActivityTime = Date.now();
+            
+            var forbidden = [
+                { key: 'c', ctrl: true, name: 'Ctrl+C (Copy)' },
+                { key: 'v', ctrl: true, name: 'Ctrl+V (Paste)' },
+                { key: 'F12', ctrl: false, name: 'F12 (DevTools)' },
+                { key: 'PrintScreen', ctrl: false, name: 'Print Screen' },
+                { key: 'i', ctrl: true, shift: true, name: 'Ctrl+Shift+I (Inspect)' },
+                { key: 'j', ctrl: true, shift: true, name: 'Ctrl+Shift+J (Console)' },
+                { key: 'u', ctrl: true, name: 'Ctrl+U (View Source)' }
+            ];
+            
+            for (var i = 0; i < forbidden.length; i++) {
+                var f = forbidden[i];
+                var match = e.key.toLowerCase() === f.key.toLowerCase() &&
+                           (!f.ctrl || e.ctrlKey || e.metaKey) &&
+                           (!f.shift || e.shiftKey);
+                if (match) {
+                    e.preventDefault();
+                    logViolation('KEYBOARD_SHORTCUT', 'Attempted: ' + f.name);
+                    return false;
+                }
+            }
+        });
+        
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            logViolation('RIGHT_CLICK', 'Context menu attempted');
+            return false;
+        });
+        
+        document.addEventListener('mousemove', function() { lastActivityTime = Date.now(); });
+        document.addEventListener('keypress', function() { lastActivityTime = Date.now(); });
+        
+        function submitExam() {
+            if (examEnded) return;
+            examEnded = true;
+            clearInterval(timerInterval);
+            clearInterval(idleCheckInterval);
+            document.getElementById('submitBtn').disabled = true;
+
+            var q1 = document.querySelector('input[name="q1"]:checked');
+            var q2 = document.querySelector('input[name="q2"]:checked');
+
+            var payload = {
+                studentId: studentId,
+                answers: {
+                    q1: q1 ? q1.parentElement.textContent.trim() : 'No answer',
+                    q2: q2 ? q2.parentElement.textContent.trim() : 'No answer'
+                },
+                violations: violations
+            };
+
+            fetch(API_URL + '/submit-exam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function(res) { return res.json(); })
+              .then(function(data) { showSubmitPopup(data.trustScore, data.violationCount); })
+              .catch(function() { showSubmitPopup(null, null); });
+        }
+
+        function showSubmitPopup(trustScore, violationCount) {
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            overlay.innerHTML = [
+                '<div style="background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:48px 40px;text-align:center;max-width:420px;width:90%;">',
+                '<div style="font-size:52px;margin-bottom:16px;">✅</div>',
+                '<h2 style="color:#e6edf3;font-size:22px;margin-bottom:10px;">Exam Submitted!</h2>',
+                trustScore !== null ? '<p style="color:#8b949e;margin-bottom:6px;">Trust Score: <strong style="color:#3fb950;">' + trustScore + '/100</strong></p>' : '',
+                violationCount !== null ? '<p style="color:#8b949e;margin-bottom:24px;">Violations: <strong style="color:#f85149;">' + violationCount + '</strong></p>' : '<p style="color:#8b949e;margin-bottom:24px;">Submission recorded.</p>',
+                '<p style="color:#8b949e;font-size:13px;margin-bottom:28px;">You may now close this tab.</p>',
+                '<button onclick="window.close()" style="background:#238636;color:#fff;border:none;padding:12px 32px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;">Close Tab</button>',
+                '</div>'
+            ].join('');
+            document.body.appendChild(overlay);
+        }
+        
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = '';
+        });
+    </script>
+</body>
+</html>

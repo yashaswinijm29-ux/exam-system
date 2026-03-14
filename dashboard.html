@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor Dashboard - Exam Integrity System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    :root {
+        --glow-purple: #a855f7;
+        --glow-blue: #3b82f6;
+        --bg-dark: #0d1117; /* GitHub's signature dark */
+        --card-light: rgba(255, 255, 255, 0.98);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        background-color: var(--bg-dark);
+        /* Subtle glowing mesh background */
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+        color: #c9d1d9;
+        min-height: 100vh;
+        padding: 40px;
+    }
+
+    /* 1. THE FOUR BOXES: Oval/Capsule Shape */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 30px;
+        margin-bottom: 60px;
+    }
+
+    .stat-card {
+        background: var(--card-light);
+        /* CHANGE: Oval/Circular shape */
+        border-radius: 60px; 
+        padding: 40px 30px;
+        text-align: center;
+        color: #0d1117;
+        position: relative;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Animated glowing border line for each oval */
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 62px;
+        padding: 2px;
+        background: linear-gradient(45deg, var(--glow-purple), var(--glow-blue), var(--glow-purple));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0.3;
+        transition: 0.5s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-12px) scale(1.02);
+    }
+
+    .stat-card:hover::after {
+        opacity: 1;
+        animation: rotateGlow 3s linear infinite;
+    }
+
+    @keyframes rotateGlow {
+        from { filter: hue-rotate(0deg); }
+        to { filter: hue-rotate(360deg); }
+    }
+
+    .stat-value {
+        font-size: 44px;
+        font-weight: 800;
+        letter-spacing: -1.5px;
+        background: linear-gradient(135deg, #0d1117 0%, #30363d 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* 2. THE STUDENT COLUMN & LOGS: Oval Glass */
+    .students-section {
+        background: rgba(22, 27, 34, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        /* CHANGE: Oval Container */
+        border-radius: 40px; 
+        padding: 40px;
+    }
+
+    .student-card {
+        background: rgba(255, 255, 255, 0.03);
+        /* CHANGE: Oval Rows */
+        border-radius: 100px; 
+        padding: 15px 40px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: 0.3s;
+    }
+
+    .student-card:hover {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: var(--glow-blue);
+    }
+
+    /* HEADER */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 50px;
+    }
+
+    .header-title h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #e6edf3;
+        letter-spacing: -0.5px;
+    }
+
+    .header-title p {
+        color: #8b949e;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    /* STAT CARD EXTRAS */
+    .stat-icon {
+        font-size: 26px;
+        color: #8b949e;
+        margin-bottom: 12px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #8b949e;
+        margin-bottom: 8px;
+    }
+
+    .stat-change {
+        font-size: 12px;
+        color: #8b949e;
+        margin-top: 8px;
+    }
+
+    /* FILTERS */
+    .filters-section {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #8b949e;
+        padding: 8px 20px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: var(--glow-blue);
+        color: var(--glow-blue);
+    }
+
+    /* SECTION HEADER */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .section-header h2 {
+        font-size: 18px;
+        color: #e6edf3;
+        font-weight: 600;
+    }
+
+    .section-header i {
+        color: #8b949e;
+        margin-right: 8px;
+    }
+
+    .sort-controls { display: flex; gap: 8px; }
+
+    .sort-btn {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #8b949e;
+        padding: 6px 16px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .sort-btn:hover {
+        border-color: var(--glow-blue);
+        color: var(--glow-blue);
+    }
+
+    /* STUDENT CARD INTERNALS */
+    .student-card {
+        flex-direction: column;
+        align-items: stretch;
+        border-radius: 20px;
+        padding: 24px 30px;
+    }
+
+    .student-card.high-risk { border-color: rgba(248, 81, 73, 0.4); }
+    .student-card.medium-risk { border-color: rgba(210, 153, 34, 0.4); }
+    .student-card.low-risk { border-color: rgba(46, 160, 67, 0.4); }
+
+    .student-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .student-info h3 { font-size: 16px; color: #e6edf3; font-weight: 600; }
+
+    .student-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #8b949e;
+        margin-top: 4px;
+    }
+
+    .trust-score { text-align: center; }
+
+    .score-badge {
+        font-size: 22px;
+        font-weight: 700;
+        padding: 8px 18px;
+        border-radius: 50px;
+        display: inline-block;
+    }
+
+    .score-badge.high { background: rgba(46,160,67,0.2); color: #3fb950; border: 1px solid rgba(46,160,67,0.4); }
+    .score-badge.medium { background: rgba(210,153,34,0.2); color: #d29922; border: 1px solid rgba(210,153,34,0.4); }
+    .score-badge.low { background: rgba(248,81,73,0.2); color: #f85149; border: 1px solid rgba(248,81,73,0.4); }
+
+    .score-label { font-size: 11px; color: #8b949e; margin-top: 4px; }
+
+    /* VIOLATIONS */
+    .violations-timeline {
+        border-top: 1px solid rgba(255,255,255,0.05);
+        padding-top: 14px;
+        margin-top: 4px;
+    }
+
+    .violations-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #8b949e;
+        margin-bottom: 10px;
+    }
+
+    .violation-item {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 50px;
+        margin-bottom: 6px;
+        font-size: 12px;
+    }
+
+    .violation-type {
+        background: rgba(248,81,73,0.15);
+        color: #f85149;
+        border: 1px solid rgba(248,81,73,0.3);
+        padding: 2px 10px;
+        border-radius: 50px;
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 11px;
+    }
+
+    .violation-details { flex: 1; color: #c9d1d9; }
+    .violation-time { color: #8b949e; white-space: nowrap; }
+    .no-violations { color: #3fb950; font-size: 13px; padding: 6px 0; }
+
+    /* ACTION BUTTONS */
+    .action-buttons { display: flex; gap: 8px; margin-top: 14px; }
+
+    .remove-btn {
+        background: rgba(248,81,73,0.1);
+        color: #f85149;
+        border: 1px solid rgba(248,81,73,0.3);
+    }
+
+    .remove-btn:hover {
+        background: rgba(248,81,73,0.2);
+        transform: scale(1.05);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #8b949e;
+    }
+
+    .empty-state i { font-size: 40px; margin-bottom: 16px; display: block; opacity: 0.4; }
+
+    /* MODAL */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 3000;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.show { display: flex; }
+
+    .modal-content, .modal > div {
+        background: #161b22;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        padding: 30px;
+        max-width: 700px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .modal-header h2 { color: #e6edf3; font-size: 20px; }
+
+    .close-btn {
+        background: rgba(248,81,73,0.1);
+        color: #f85149;
+        border: 1px solid rgba(248,81,73,0.3);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+
+    .close-btn:hover { background: rgba(248,81,73,0.25); }
+
+    .modal-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .modal-stat {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 50px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .modal-stat-value { font-size: 26px; font-weight: 700; color: var(--glow-blue); }
+    .modal-stat-label { font-size: 11px; color: #8b949e; margin-top: 4px; text-transform: uppercase; }
+
+    .modal-violations { display: flex; flex-direction: column; gap: 10px; }
+
+    .modal-violation-item {
+        background: rgba(0,0,0,0.2);
+        border-left: 3px solid #f85149;
+        border-radius: 0 12px 12px 0;
+        padding: 12px 16px;
+    }
+
+    .modal-violation-type {
+        background: rgba(248,81,73,0.15);
+        color: #f85149;
+        padding: 3px 10px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 6px;
+    }
+
+    .modal-violation-details { color: #c9d1d9; font-size: 13px; margin-bottom: 4px; }
+    .modal-violation-time { color: #8b949e; font-size: 11px; }
+
+    /* 3. BUTTONS: Pill/Oval Shapes */
+    .refresh-btn, .action-btn {
+        border-radius: 50px; /* Perfect Oval */
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 12px;
+        padding: 12px 28px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .refresh-btn {
+        background: transparent;
+        border: 1px solid var(--glow-blue);
+        color: var(--glow-blue);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+    }
+
+    .refresh-btn:hover {
+        background: var(--glow-blue);
+        color: white;
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+    }
+
+    .view-btn {
+        background: #238636; /* GitHub Green */
+        color: white;
+        border: none;
+    }
+
+    .view-btn:hover {
+        background: #2ea043;
+        transform: scale(1.05);
+    }
+
+
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="header">
+            <div class="header-title">
+                <h1>Exam Integrity Dashboard</h1>
+                <p>Real-time Monitoring & Analysis</p>
+            </div>
+            <div class="header-controls">
+                <button class="refresh-btn" onclick="loadData()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-value" id="totalStudents">0</div>
+                <div class="stat-change">Active Exams</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="stat-label">Total Violations</div>
+                <div class="stat-value" id="totalViolations">0</div>
+                <div class="stat-change">Detected</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                <div class="stat-label">Average Trust Score</div>
+                <div class="stat-value" id="avgTrustScore">100</div>
+                <div class="stat-change">Out of 100</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-alert"></i></div>
+                <div class="stat-label">High Risk Students</div>
+                <div class="stat-value" id="highRiskCount">0</div>
+                <div class="stat-change">Score < 50</div>
+            </div>
+        </div>
+
+        <div class="filters-section">
+            <button class="filter-btn active" onclick="filterStudents('all')">All Students</button>
+            <button class="filter-btn" onclick="filterStudents('high-risk')">High Risk</button>
+            <button class="filter-btn" onclick="filterStudents('medium-risk')">Medium Risk</button>
+            <button class="filter-btn" onclick="filterStudents('low-risk')">Low Risk</button>
+        </div>
+
+        <div class="students-section">
+            <div class="section-header">
+                <h2><i class="fas fa-list"></i> Student Activity Log</h2>
+                <div class="sort-controls">
+                    <button class="sort-btn" onclick="sortStudents('score')">Sort by Score</button>
+                    <button class="sort-btn" onclick="sortStudents('violations')">Sort by Violations</button>
+                </div>
+            </div>
+            <div id="studentList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="detailsModal"></div>
+
+    <script>
+        var allStudents = [];
+        var currentFilter = 'all';
+        var currentSort = 'score';
+
+        function loadData() {
+            fetch('http://localhost:3000/api/students')
+                .then(function(res) { return res.json(); })
+                .then(function(students) {
+                    allStudents = students;
+                    updateStats(students);
+                    renderStudents(students);
+                })
+                .catch(function(err) {
+                    console.error('Error loading data:', err);
+                    var container = document.getElementById('studentList');
+                    if (container) {
+                        container.innerHTML = '<div class="empty-state"><i class="fas fa-wifi-off"></i><p>Connection Error. Make sure server is running.</p></div>';
+                    }
+                });
+        }
+
+        function updateStats(students) {
+            var totalViolations = 0;
+            var totalScore = 0;
+            var highRisk = 0;
+
+            for (var i = 0; i < students.length; i++) {
+                var s = students[i];
+                totalViolations += (s.violationCount || 0);
+                var score = s.trustScore || 100;
+                totalScore += score;
+                if (score < 50) highRisk++;
+            }
+
+            var avgScore = students.length > 0 ? Math.round(totalScore / students.length) : 100;
+
+            document.getElementById('totalStudents').textContent = students.length;
+            document.getElementById('totalViolations').textContent = totalViolations;
+            document.getElementById('avgTrustScore').textContent = avgScore;
+            document.getElementById('highRiskCount').textContent = highRisk;
+        }
+
+        function filterStudents(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderStudents(allStudents);
+        }
+
+        function sortStudents(sort) {
+            currentSort = sort;
+            renderStudents(allStudents);
+        }
+
+        function renderStudents(students) {
+            var container = document.getElementById('studentList');
+
+            var filtered = students.filter(function(s) {
+                var score = s.trustScore || 100;
+                if (currentFilter === 'high-risk') return score < 50;
+                if (currentFilter === 'medium-risk') return score >= 50 && score < 70;
+                if (currentFilter === 'low-risk') return score >= 70;
+                return true;
+            });
+
+            filtered.sort(function(a, b) {
+                if (currentSort === 'score') {
+                    return (a.trustScore || 100) - (b.trustScore || 100);
+                } else {
+                    return (b.violationCount || 0) - (a.violationCount || 0);
+                }
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No students found in this category.</p></div>';
+                return;
+            }
+
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var student = filtered[i];
+                var score = student.trustScore || 100;
+                var riskClass = score >= 70 ? 'low-risk' : score >= 50 ? 'medium-risk' : 'high-risk';
+                var scoreClass = score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low';
+
+                var violations = student.violations || [];
+                var violationsList = '';
+
+                if (violations.length > 0) {
+                    for (var j = 0; j < violations.length; j++) {
+                        var v = violations[j];
+                        var time = new Date(v.timestamp).toLocaleTimeString();
+                        violationsList += '<div class="violation-item"><span class="violation-type">' + v.type + '</span><span class="violation-details">' + v.details + '</span><span class="violation-time">' + time + '</span></div>';
+                    }
+                } else {
+                    violationsList = '<div class="no-violations">✓ No violations detected</div>';
+                }
+
+                html += '<div class="student-card ' + riskClass + '"><div class="student-header"><div class="student-info"><h3>' + student.studentId + '</h3><div class="student-meta"><span><i class="fas fa-exclamation-circle"></i> ' + (student.violationCount || 0) + ' violations</span><span><i class="fas fa-clock"></i> ' + (student.submittedAt ? new Date(student.submittedAt).toLocaleTimeString() : 'In Progress') + '</span></div></div><div class="trust-score"><div class="score-badge ' + scoreClass + '">' + score + '</div><div class="score-label">Trust Score</div></div></div><div class="violations-timeline"><div class="violations-title">Recent Violations</div>' + violationsList + '</div><div class="action-buttons"><button class="action-btn view-btn" onclick="viewStudent(\'' + student.studentId + '\')"><i class="fas fa-eye"></i> View Details</button><button class="action-btn remove-btn" onclick="removeStudent(\'' + student.studentId + '\')"><i class="fas fa-trash"></i> Remove</button></div></div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function viewStudent(studentId) {
+            var student = allStudents.find(function(s) { return s.studentId === studentId; });
+            if (!student) return;
+
+            var violations = student.violations || [];
+            var violationsHtml = '';
+
+            if (violations.length > 0) {
+                for (var i = 0; i < violations.length; i++) {
+                    var v = violations[i];
+                    var time = new Date(v.timestamp).toLocaleTimeString();
+                    violationsHtml += '<div class="modal-violation-item"><div class="modal-violation-info"><div class="modal-violation-type">' + v.type + '</div><div class="modal-violation-details">' + v.details + '</div><div class="modal-violation-time">' + time + '</div></div></div>';
+                }
+            } else {
+                violationsHtml = '<div style="text-align: center; color: #2ed573; padding: 20px;">✓ No violations detected</div>';
+            }
+
+            var score = student.trustScore || 100;
+            var modalContent = '<div class="modal-header"><h2>' + studentId + ' - Complete Details</h2><button class="close-btn" onclick="closeModal()">&times;</button></div><div class="modal-stats"><div class="modal-stat"><div class="modal-stat-value">' + score + '</div><div class="modal-stat-label">Trust Score</div></div><div class="modal-stat"><div class="modal-stat-value">' + (student.violationCount || 0) + '</div><div class="modal-stat-label">Total Violations</div></div><div class="modal-stat"><div class="modal-stat-value">' + violations.length + '</div><div class="modal-stat-label">Logged Events</div></div></div><div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.2);"><h3 style="color: #00d4ff; margin-bottom: 15px;">All Violations (' + violations.length + ')</h3><div class="modal-violations">' + violationsHtml + '</div></div>';
+
+            document.getElementById('detailsModal').innerHTML = modalContent;
+            document.getElementById('detailsModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').classList.remove('show');
+        }
+
+        function removeStudent(studentId) {
+            if (confirm('Are you sure you want to remove ' + studentId + '?')) {
+                fetch('http://localhost:3000/remove-student/' + studentId, {
+                    method: 'POST'
+                }).then(function(res) { return res.json(); })
+                  .then(function(data) {
+                      alert(data.message);
+                      loadData();
+                  });
+            }
+        }
+
+        loadData();
+        setInterval(loadData, 5000);
+    </script>
+</body>
+</html>
